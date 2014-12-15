@@ -117,8 +117,7 @@ PRODUCT_COPY_FILES += \
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.opengles.version=131072 \
     ro.zygote.disable_gl_preload=true \
-    ro.bq.gpu_to_cpu_unsupported=1 \
-    debug.hwui.render_dirty_regions=false
+    ro.bq.gpu_to_cpu_unsupported=1 
 
 # RIL
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -185,7 +184,7 @@ PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
 $(call inherit-product, frameworks/native/build/phone-hdpi-512-dalvik-heap.mk)
 
 # Include exynos4 platform specific parts
-TARGET_HAL_PATH := hardware/samsung/exynos4/hal
+TARGET_HAL_PATH := hardware/samsung_slsi/exynos4
 TARGET_OMX_PATH := hardware/samsung/exynos/multimedia/openmax
 $(call inherit-product, hardware/samsung/exynos4210.mk)
 
