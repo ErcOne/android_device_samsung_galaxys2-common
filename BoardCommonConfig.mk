@@ -100,6 +100,7 @@ BOARD_USE_YAMAHA_MC1N2_AUDIO := true
 # RIL
 BOARD_PROVIDES_LIBRIL := true
 BOARD_MODEM_TYPE := xmm6260
+BOARD_RIL_CLASS := ../../../hardware/samsung/ril 
 
 # Camera
 BOARD_USES_PROPRIETARY_LIBFIMC := true
@@ -138,18 +139,18 @@ BOARD_VOLD_DISC_HAS_MULTIPLE_MAJORS := true
 TARGET_USE_CUSTOM_LUN_FILE_PATH := "/sys/devices/platform/s3c-usbgadget/gadget/lun%d/file"
 
 # Selinux
-BOARD_SEPOLICY_DIRS += \
-    device/samsung/galaxys2-common/selinux
+#BOARD_SEPOLICY_DIRS += \
+#    device/samsung/galaxys2-common/selinux
 
-BOARD_SEPOLICY_UNION += \
-    device.te \
-    drmserver.te \
-    ueventd.te \
-    domain.te \
-    file.te \
-    file_contexts \
-    rild.te \
-    vold.te
+#BOARD_SEPOLICY_UNION += \
+#   device.te \
+#    drmserver.te \
+#    ueventd.te \
+#   domain.te \
+#    file.te \
+#    file_contexts \
+#    rild.te \
+#    vold.te
 
 # Recovery
 BOARD_CUSTOM_RECOVERY_KEYMAPPING := ../../device/samsung/galaxys2-common/recovery/recovery_keys.c
@@ -162,6 +163,12 @@ BOARD_SUPPRESS_EMMC_WIPE := true
 BOARD_RECOVERY_SWIPE := true
 TARGET_RECOVERY_FSTAB := device/samsung/galaxys2-common/rootdir/fstab.smdk4210
 RECOVERY_FSTAB_VERSION := 2
+
+# Include an expanded selection of fonts
+EXTENDED_FONT_FOOTPRINT := true 
+
+# Blobs
+COMMON_GLOBAL_CFLAGS += -DNEEDS_VECTORIMPL_SYMBOLS
 
 # Device specific headers
 TARGET_SPECIFIC_HEADER_PATH := device/samsung/galaxys2-common/include
