@@ -1,1 +1,6 @@
 allow drmserver sdcard_external:file open;
+allow mediaserver volume_data_file:file create_file_perms;
+allow mediaserver volume_data_file:dir create_dir_perms;
+
+# Bluetooth audio
+allow mediaserver bluetooth:unix_stream_socket { connectto };
