@@ -1,10 +1,41 @@
 import init.smdk4210.usb.rc
 import init.gps.rc
 
+on init
+    chmod 0701 /mnt/media_rw
+    chown root root /mnt/media_rw
+    mkdir /mnt/shell/emulated 0700 shell shell
+    mkdir /storage 0550 system sdcard_r
+    mkdir /storage/emulated 0555 root root
+    mkdir /storage/sdcard1 0775 system system
+    mkdir /storage/usbdisk0 0775 system system
+    mkdir /mnt/media_rw/sdcard1 0775 system system
+    mkdir /mnt/media_rw/usbdisk0 0775 system system
+
+    export EXTERNAL_STORAGE /storage/emulated/legacy
+    export SECONDARY_STORAGE /storage/sdcard1:/storage/usbdisk0
+    export EMULATED_STORAGE_SOURCE /mnt/shell/emulated
+    export EMULATED_STORAGE_TARGET /storage/emulated
+
+    # for backwards compatibility
+    symlink /storage/emulated/legacy /sdcard
+    symlink /storage/emulated/legacy /mnt/sdcard
+    symlink /storage/emulated/legacy /storage/sdcard0
+    symlink /mnt/shell/emulated/0 /storage/emulated/legacy
+    symlink /storage/sdcard1 /extSdCard
+    symlink /storage/sdcard1 /mnt/extSdCard
+    symlink /storage/usbdisk0 /usbdisk0
+    symlink /storage/usbdisk0 /mnt/usbdisk0
+    
+    mkdir /efs 0771 radio system
+    mkdir /tombstones
+    symlink /efs /factory
+    
 # Disable CFQ slice idle delay
     write /sys/block/mmcblk0/queue/iosched/slice_idle 0
 
 on fs
+    mkdir /preload
     mount_all /fstab.smdk4210
 
     mkdir /efs/bluetooth
@@ -34,6 +65,9 @@ on fs
     restorecon /efs/imei/mps_code.dat
 
 on post-fs-data
+# we will remap this as /mnt/sdcard with the sdcard fuse tool
+   mkdir /data/media 0775 media_rw media_rw
+   chown media_rw media_rw /data/media
 # insmod kernel modules
     insmod /system/lib/modules/j4fs.ko
     insmod /system/lib/modules/Si4709_driver.ko
@@ -156,6 +190,10 @@ on post-fs-data
 
     chown system system /sys/class/backlight/panel/brightness
     chown system system /sys/class/power_supply/battery/temp
+    
+# S-Pen
+    chown system system /sys/class/sec/sec_epen/epen_saving_mode
+    chmod 660 /sys/class/sec/sec_epen/epen_saving_mode
 
 # Permissions for input devices
     chown system radio /sys/devices/virtual/sec/sec_key/sec_key_pressed
@@ -248,7 +286,11 @@ on post-fs-data
 # Permission for radio
     chown system radio /sys/devices/platform/s5p-ehci/ehci_power
     chown system radio /sys/devices/platform/s5p-ehci/ehci_runtime
-    chown system radio /sys/devices/virtual/misc/multipdp/waketime    
+    chown system radio /sys/devices/virtual/misc/multipdp/waketime 
+
+# Thermistor node
+    chown radio system /sys/devices/platform/sec-thermistor/temp_adc
+    chown radio system /sys/devices/platform/sec-thermistor/temperature
 
 # for datarouter
     chown system system /dev/dun
@@ -260,6 +302,12 @@ on post-fs-data
 # DVFS - cpufreq ondemand
     write /sys/devices/system/cpu/cpufreq/ondemand/down_differential 5
     write /sys/devices/system/cpu/cpufreq/ondemand/up_threshold 85
+    
+# Audio (Earjack)
+    chown system radio /sys/class/audio/earjack/select_jack
+    chown system radio /sys/class/audio/earjack/key_state
+    chown system radio /sys/class/audio/earjack/state
+    chown media system /sys/class/audio/earjack/reselect_jack
 
 #panorama directory creation
     mkdir /data/pxtmpdir 0775
@@ -394,14 +442,16 @@ service bugreport /system/bin/dumpstate -d -p -B \
     oneshot
     keycodes 114 115 116
 
-service fuse_sdcard0 /system/bin/sdcard -u 1023 -g 1023 -d /mnt/media_rw/sdcard0 /storage/sdcard0
+# create virtual SD card at /mnt/sdcard, based on the /data/media directory
+# daemon will drop to user/group system/media_rw after initializing
+# underlying files in /data/media wil be created with user and group media_rw (1023)
+service sdcard /system/bin/sdcard -u 1023 -g 1023 -l /data/media /mnt/shell/emulated
+    class late_start
+
+service fuse_sdcard1 /system/bin/sdcard -u 1023 -g 1023 /mnt/media_rw/sdcard1 /storage/sdcard1
     class late_start
     disabled
 
-service fuse_sdcard1 /system/bin/sdcard -u 1023 -g 1023 -d /mnt/media_rw/sdcard1 /storage/sdcard1
-    class late_start
-    disabled
-
-service fuse_usbdisk0 /system/bin/sdcard -u 1023 -g 1023 -d /mnt/media_rw/usbdisk0 /storage/usbdisk0
+service fuse_usbdisk0 /system/bin/sdcard -u 1023 -g 1023 /mnt/media_rw/usbdisk0 /storage/usbdisk0
     class late_start
     disabled
